@@ -45,11 +45,12 @@ uint16_t cpu_program[27] = {
 };
 
 Vector2 screen_size = {512, 512};
+int target_fps = 60;
 
 int main(void) {
 	InitWindow(screen_size.x, screen_size.y, "Blue CPU Visualiser");
-	SetTargetFPS(60);
-
+	SetTargetFPS(target_fps);
+	
 	//init cpu
 	BlueCpu_t* cpu = initCpu(malloc, free);
 	if (!cpu) {
@@ -62,24 +63,21 @@ int main(void) {
 		return 2;
 	}
 	enableCpu(cpu);
-
+	
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(WHITE);
-
+		
 		//draw REGS
-		//draw RAM
 		Vector2 pos = {10, 10};
 		Vector2 size = {4, 4};
 		Color color;
-		uint16_t cell;
+		uint16_t cell = 0;
 		uint16_t cell_d;
 		int dist = 1;
 		for (int i = 0; i < 64; i++) {
 			for (int j = 0; j < 64; j++) {
-				cell = (uint16_t)((i + 1) * (j + 1));
 				cell_d = getRamCell(cpu, cell);
-				printf("cell = %d\n", cell_d);
 				Color color = {
 				  (uint8_t)cell_d & 0xF800 >> 11,
 				  (uint8_t)cell_d & 0x07C0 >>  6,
@@ -89,20 +87,20 @@ int main(void) {
 				if (cell_d)
 					DrawRectangleV(pos, size, color);
 				pos.x += dist + size.x;
+				cell++;
 			}
 			pos.x = 10;
 			pos.y += dist + size.y;
 		}
-
+		
 		//draw GUI buttons
-
-		emulateCycle(cpu);
-
 		EndDrawing();
+		//break;
+		emulateCycle(cpu);
 	}
-
+	
 	CloseWindow();
 	deinitCpu(cpu, free);
-
+	
 	return 0;
 }
