@@ -1,0 +1,14 @@
+Visualisation application for BLUE CPU emulator
+
+	Shows you the current state of the CPUs registers and RAM in the fancy way.
+Allows to control CPU directly.
+
+Uses:
+- Blue CPU emulator: https://github.com/msun-dev/cpu-blue
+- Raylib (GUI): https://github.com/raysan5/raylib
+
+To build:
+- Linux: Be sure that you have raylib library installed (static).
+		Then do `./scripts/build.sh`
+- Windows: Not possible yet
+- WASM: Not possible yet

@@ -1,0 +1,6 @@
+# C
+/bin/*
+/build/*
+
+# General
+*.png
