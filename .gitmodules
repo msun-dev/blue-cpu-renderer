@@ -1,0 +1,3 @@
+[submodule "include/blue-cpu"]
+	path = include/blue-cpu
+	url = https://github.com/msun-dev/blue-cpu
