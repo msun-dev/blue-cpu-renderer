@@ -58,6 +58,8 @@ void Process(context_t* ctx);
 void Draw(context_t* ctx);
 void Shutdown(context_t* ctx);
 
+Color GetColorFromCell(uint16_t val);
+
 int main(void) {
 	context_t ctx = { {512, 512}, 60, NULL, false, false, false, false, false};
 	
@@ -139,6 +141,7 @@ void Draw(context_t* ctx) {
 		ctx->restart_req = true;
 	
 	// CPU
+	// RAM
 	Vector2 pos = {10, 10};
 	Vector2 size = {4, 4};
 	Color color;
@@ -148,12 +151,7 @@ void Draw(context_t* ctx) {
 	for (int i = 0; i < 64; i++) {
 		for (int j = 0; j < 64; j++) {
 			cell_d = getRamCell(ctx->cpu, cell);
-			Color color = {
-				0,
-				(uint8_t)((cell_d >> 8) & 0xFF),
-				(uint8_t)((cell_d & 0xFF)),
-				0xFF,
-			};
+			Color color = GetColorFromCell(cell_d);
 			if (cell_d)
 				DrawRectangleV(pos, size, color);
 			pos.x += dist + size.x;
@@ -162,6 +160,7 @@ void Draw(context_t* ctx) {
 		pos.x = 10;
 		pos.y += dist + size.y;
 	}
+	// Registers
 	
 	EndDrawing();
 }
@@ -169,4 +168,14 @@ void Draw(context_t* ctx) {
 void Shutdown(context_t* ctx) {
 	CloseWindow();
 	deinitCpu(ctx->cpu, free);
+}
+
+Color GetColorFromCell(uint16_t value) {
+	Color c = {
+		0,
+		(uint8_t)((value >> 8) & 0xFF),
+		(uint8_t)((value & 0xFF)),
+		0xFF
+	};
+	return c;
 }
