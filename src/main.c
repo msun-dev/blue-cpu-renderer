@@ -1,13 +1,11 @@
-// STD
-#include <stdio.h>
-#include <stdint.h>
 // Raylib
 #include "raylib.h"
 #include "raymath.h"
 #define RAYGUI_IMPLEMENTATION
 #include "../include/raygui.h"
 // Own libs
-#include "../include/emu-blue/cpu.h"
+#include "../include/blue-cpu/src/cpu.h"
+#include "../include/blue-cpu/src/types.h"
 
 uint16_t cpu_program[27] = {
 // CODE   addr  ASM OP   Cycles  Registers state
@@ -44,63 +42,131 @@ uint16_t cpu_program[27] = {
 	0x0000, //1B| HLT xxx | 24    |
 };
 
-Vector2 screen_size = {512, 512};
-int target_fps = 60;
+typedef struct context_t {
+	Vector2    screen_size;
+	int        target_fps;
+	BlueCpu_t* cpu;
+	bool       process_enabled; // Enables process
+	bool       step_req;        // Single step
+	bool       clear_req;       // Clears CPU memory and regs
+	bool       corrupt_req;     // Sets to random uint values besides 0
+	bool       restart_req;     // Clears cpu and loads starting program
+} context_t;
+
+void Setup(context_t* ctx);
+void Process(context_t* ctx);
+void Draw(context_t* ctx);
+void Shutdown(context_t* ctx);
 
 int main(void) {
-	InitWindow(screen_size.x, screen_size.y, "Blue CPU Visualiser");
-	SetTargetFPS(target_fps);
+	context_t ctx = { {512, 512}, 60, NULL, false, false, false, false, false};
 	
-	//init cpu
-	BlueCpu_t* cpu = initCpu(malloc, free);
-	if (!cpu) {
-		printf("Error initialisating cpu\n");
-		return 0;
-	}
-	if (loadProgram(cpu, 0x0000, cpu_program,
-	                sizeof(cpu_program) / sizeof(uint16_t))) {
-		printf("error loading the programm\n");
-		return 2;
-	}
-	enableCpu(cpu);
+	Setup(&ctx);
 	
 	while (!WindowShouldClose()) {
-		BeginDrawing();
-		ClearBackground(WHITE);
-		
-		//draw REGS
-		Vector2 pos = {10, 10};
-		Vector2 size = {4, 4};
-		Color color;
-		uint16_t cell = 0;
-		uint16_t cell_d;
-		int dist = 1;
-		for (int i = 0; i < 64; i++) {
-			for (int j = 0; j < 64; j++) {
-				cell_d = getRamCell(cpu, cell);
-				Color color = {
-				  (uint8_t)cell_d & 0xF800 >> 11,
-				  (uint8_t)cell_d & 0x07C0 >>  6,
-				  (uint8_t)cell_d & 0x003F,
-				  0xFF,
-				};
-				if (cell_d)
-					DrawRectangleV(pos, size, color);
-				pos.x += dist + size.x;
-				cell++;
-			}
-			pos.x = 10;
-			pos.y += dist + size.y;
-		}
-		
-		//draw GUI buttons
-		EndDrawing();
-		//break;
-		emulateCycle(cpu);
+		Process(&ctx);
+		Draw(&ctx);
 	}
 	
-	CloseWindow();
-	deinitCpu(cpu, free);
+	Shutdown(&ctx);
 	
 	return 0;
+}
+
+void Setup(context_t* ctx) {
+	InitWindow(ctx->screen_size.x, ctx->screen_size.y, "Blue CPU Visualiser");
+	SetTargetFPS(ctx->target_fps);
+	
+	ctx->cpu = initCpu(malloc, free);
+	if (!ctx->cpu) {
+		return 0;
+	}
+	if (loadProgram(
+			  ctx->cpu, 0x0000, cpu_program, sizeof(cpu_program) / sizeof(uint16_t))) {
+		return 2;
+	}
+	enableCpu(ctx->cpu);
+}
+
+void Process(context_t* ctx) {
+	if (ctx->process_enabled) {
+		emulateCycle(ctx->cpu);
+	}
+	if (ctx->step_req) {
+		emulateCycle(ctx->cpu);
+		ctx->step_req = false;
+	}
+	if (ctx->clear_req) {
+		clearRam(ctx->cpu);
+		ctx->clear_req = false;
+	}
+	if (ctx->corrupt_req) {
+		for (uint16_t i = 0; i < RAM_LEN; i++) {
+			setRamCell(ctx->cpu, i, 0xFFFF);
+		}
+		ctx->corrupt_req = false;
+	}
+	if (ctx->restart_req) {
+		free(ctx->cpu);
+		ctx->cpu = initCpu(malloc, free);
+		if (!ctx->cpu) {
+			return 0;
+		}
+		if (loadProgram(
+					ctx->cpu, 0x0000, cpu_program,
+					sizeof(cpu_program) / sizeof(uint16_t))) {
+			return 2;
+		}
+		enableCpu(ctx->cpu);
+		ctx->restart_req = false;
+	}
+}
+
+void Draw(context_t* ctx) {
+	BeginDrawing();
+	ClearBackground(WHITE);
+	
+	// UI
+	if (GuiButton((Rectangle) { 340, 10, 25, 25}, "S"))
+		ctx->step_req = true;
+	if (GuiButton((Rectangle) { 366, 10, 25, 25}, "P"))
+		ctx->process_enabled = !ctx->process_enabled;
+	if (GuiButton((Rectangle) { 392, 10, 25, 25}, "CL"))
+		ctx->clear_req = true;
+	if (GuiButton((Rectangle) { 418, 10, 25, 25}, "CO"))
+		ctx->corrupt_req = true;
+	if (GuiButton((Rectangle) { 444, 10, 25, 25}, "R"))
+		ctx->restart_req = true;
+	
+	// CPU
+	Vector2 pos = {10, 10};
+	Vector2 size = {4, 4};
+	Color color;
+	uint16_t cell = 0;
+	uint16_t cell_d;
+	int dist = 1;
+	for (int i = 0; i < 64; i++) {
+		for (int j = 0; j < 64; j++) {
+			cell_d = getRamCell(ctx->cpu, cell);
+			Color color = {
+				0,
+				(uint8_t)((cell_d >> 8) & 0xFF),
+				(uint8_t)((cell_d & 0xFF)),
+				0xFF,
+			};
+			if (cell_d)
+				DrawRectangleV(pos, size, color);
+			pos.x += dist + size.x;
+			cell++;
+		}
+		pos.x = 10;
+		pos.y += dist + size.y;
+	}
+	
+	EndDrawing();
+}
+
+void Shutdown(context_t* ctx) {
+	CloseWindow();
+	deinitCpu(ctx->cpu, free);
 }
