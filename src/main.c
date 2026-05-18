@@ -176,6 +176,9 @@ void Draw(context_t* ctx) {
 	}
 	
 	// Registers
+	uint16_t reg = getRegister(ctx->cpu, REG_PC);
+	Vector2 ir_pos = {10 + reg % 64 * 5, 10 + reg / 64 * 5};
+	DrawRectangleLines(ir_pos.x, ir_pos.y, 5, 5, (Color){0xFF, 0x00, 0x00, 0xFF});
 	
 	// Switches
 	Vector2 sw_pos = {10, 330};
