@@ -4,6 +4,7 @@
 #define RAYGUI_IMPLEMENTATION
 #include "../include/raygui.h"
 // Own libs
+#include "../include/prng.h"
 #include "../include/blue-cpu/src/cpu.h"
 #include "../include/blue-cpu/src/types.h"
 
@@ -42,10 +43,16 @@ uint16_t cpu_program[27] = {
 	0x0000, //1B| HLT xxx | 24    |
 };
 
+typedef struct prng_t {
+	uint32_t state;
+	uint32_t inc;
+} prng_t;
+
 typedef struct context_t {
 	Vector2    screen_size;
 	int        target_fps;
 	BlueCpu_t* cpu;
+	prng_t*    rng;
 	bool       process_enabled; // Enables process
 	bool       step_req;        // Single step
 	bool       clear_req;       // Clears CPU memory and regs
@@ -61,7 +68,8 @@ void Shutdown(context_t* ctx);
 Color GetColorFromCell(uint16_t val);
 
 int main(void) {
-	context_t ctx = { {512, 512}, 60, NULL, false, false, false, false, false};
+	context_t ctx = { {512, 512}, 60, NULL, NULL, false,
+	                  false, false, false, false};
 	
 	Setup(&ctx);
 	
@@ -78,6 +86,10 @@ int main(void) {
 void Setup(context_t* ctx) {
 	InitWindow(ctx->screen_size.x, ctx->screen_size.y, "Blue CPU Visualiser");
 	SetTargetFPS(ctx->target_fps);
+	
+	ctx->rng = malloc(sizeof(pcg32_random_t));
+	ctx->rng->state = 80085; // TODO: Replace for timestamp
+	ctx->rng->inc = 800815;
 	
 	ctx->cpu = initCpu(malloc, free);
 	if (!ctx->cpu) {
@@ -104,7 +116,8 @@ void Process(context_t* ctx) {
 	}
 	if (ctx->corrupt_req) {
 		for (uint16_t i = 0; i < RAM_LEN; i++) {
-			setRamCell(ctx->cpu, i, 0xFFFF);
+			uint16_t cell = (uint16_t)pcg32_random_r(&ctx->rng);
+			setRamCell(ctx->cpu, i, cell);
 		}
 		ctx->corrupt_req = false;
 	}
@@ -120,6 +133,7 @@ void Process(context_t* ctx) {
 			return 2;
 		}
 		enableCpu(ctx->cpu);
+		ctx->process_enabled = false;
 		ctx->restart_req = false;
 	}
 }
@@ -160,7 +174,20 @@ void Draw(context_t* ctx) {
 		pos.x = 10;
 		pos.y += dist + size.y;
 	}
+	
 	// Registers
+	
+	// Switches
+	Vector2 sw_pos = {10, 330};
+	for (size_t i = 0; i < SWITCHES_LEN; i++) {
+		DrawRectangleV(sw_pos,
+		               size,
+		               ctx->cpu->status_switches[i] == true ?
+		                 (Color){0xFF, 0x00, 0x00, 0xFF} :
+		                 (Color){0x00, 0x00, 0x00, 0xFF}
+		);
+		sw_pos.x += 5;
+	}
 	
 	EndDrawing();
 }
@@ -178,4 +205,12 @@ Color GetColorFromCell(uint16_t value) {
 		0xFF
 	};
 	return c;
+}
+
+uint32_t RandGenU32(prng_t* rng) {
+	uint64_t oldstate = rng->state;
+	rng->state = oldstate * 6364136223846793005ULL + (rng->inc | 1);
+	uint32_t xorshifted = ((oldstate >> 18u) ^ oldstate) >> 27u;
+	uint32_t rot = oldstate >> 59u;
+	return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
