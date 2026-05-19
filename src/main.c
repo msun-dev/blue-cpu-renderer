@@ -41,8 +41,8 @@ uint16_t cpu_program[27] = {
 	0x0000, //16| HLT xxx |       | trap just in case.
 	/* Not Sub-Routine */
 	0x6005, //17| LDA 005 | 21    | A = 2222
-	0x1004, //1A| ADD 004 | 23    | A = 2222 + 5555 = 7777
-	0x0000, //1B| HLT xxx | 24    |
+	0x1004, //18| ADD 004 | 23    | A = 2222 + 5555 = 7777
+	0x0000, //19| HLT xxx | 24    |
 };
 
 typedef struct prng_t {
