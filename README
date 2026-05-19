@@ -3,12 +3,37 @@ Visualisation application for BLUE CPU emulator
 	Shows you the current state of the CPUs registers and RAM in the fancy way.
 Allows to control CPU directly.
 
+Controls:
+- `St`: "Step" - emulates one cycle
+- `Pr`: "Process" - togless process
+- `Cl`: "Clear" - Clears RAM and registers, switches switches to its default state
+- `Co`: "Corrupt" - Fills RAM with random values
+- `Re`: "Reset" - frees and initialises CPU
+- `PC`: "Program Counter" - Toggles program counter render
+
 Uses:
 - Blue CPU emulator: https://github.com/msun-dev/cpu-blue
 - Raylib (GUI): https://github.com/raysan5/raylib
 
 To build:
-- Linux: Be sure that you have raylib library installed (static).
+- Linux: Make sure that you have raylib library installed (static).
 		Then do `./scripts/build.sh`
 - Windows: Not possible yet
 - WASM: Not possible yet
+
+Personal notes:
+	Interestingly this thing is super close to the other project I tried to make:
+one app with many renderers. The only thing I need to do is to abstract `Setup()`,
+`Draw()` and `Shutdown()` functions into a some sorts of struct and write
+implementations for other renderers.
+	Also I don't know much about `context` architecture, saw that flipper gives it
+you in the custom apps you write (never did one myself). Didnt use said context
+for the full potential but maybe this thing would be very useful to use between
+different renderers at the runtime.
+	Corrupt thingy not really corrupts memory but fills it with random numbers.
+Judging by switches it fails, mostly, because of RTA switch (ready to transfer
+but nothing reads data, hence, stop), and the 2nd is halt commands, duh.
+	Honestly, i hoped that it would be kinda clear what is what inside the rendered
+cells. But I can't tell what is what!
+	Was writing some loops and remembered that I wrote exact same functions in the
+CPU library that do the same thing I'm trying to write. Pity me!
