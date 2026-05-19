@@ -163,6 +163,7 @@ void Draw(context_t* ctx) {
 		ctx->draw_pc = true;
 	
 	Vector2 size = {4, 4};
+	Vector2 size_small = {1, 1};
 	// CPU
 	// RAM
 	Vector2 pos = {10, 10};
@@ -176,6 +177,8 @@ void Draw(context_t* ctx) {
 			Color color = GetColorFromCell(cell_d);
 			if (cell_d)
 				DrawRectangleV(pos, size, color);
+			else
+				DrawRectangleV(pos, size_small, GRAY);
 			pos.x += dist + size.x;
 			cell++;
 		}
