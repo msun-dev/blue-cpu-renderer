@@ -191,10 +191,10 @@ void Draw(context_t* ctx) {
 	// PC
 	if (ctx->draw_pc) {
 		uint16_t reg = getRegister(ctx->cpu, REG_PC);
-		Vector2 ir_pos = {10 + reg % 64 * (size.x + 1), 10 + reg / 64 * (size.y + 1)};
-		if (ctx->cpu->status_switches[SW_POWER])
-			DrawRectangleLines(ir_pos.x, ir_pos.y, size.x, size.y,
-			                   (Color){0xFF, 0x00, 0x00, 0xFF});
+		Vector2 ir_coord = {reg % 64, reg / 64};
+		Vector2 ir_pos = {ir_coord.x * 5 + 10, ir_coord.y * 5 + 10};
+		DrawRectangleLines(ir_pos.x, ir_pos.y, size.x, size.y,
+											 (Color){0xFF, 0x00, 0x00, 0xFF});
 	}
 	// registers[]
 	Vector2 reg_pos = {10, 335};
