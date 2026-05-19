@@ -72,7 +72,7 @@ Color GetColorFromCell(uint16_t val);
 
 int main(void) {
 	context_t ctx = {{512, 512}, 60, NULL, NULL,
-	                 false, false, false, false, false, true};
+	                 true, false, false, false, false, true};
 	
 	Setup(&ctx);
 	
@@ -149,17 +149,17 @@ void Draw(context_t* ctx) {
 	ClearBackground(WHITE);
 	
 	// UI
-	if (GuiButton((Rectangle) { 340, 10, 25, 25}, "S"))
+	if (GuiButton((Rectangle) { 340, 10, 25, 25}, "St"))
 		ctx->step_req = true;
-	if (GuiToggle((Rectangle) { 366, 10, 25, 25}, "P", &ctx->process_enabled))
+	if (GuiToggle((Rectangle) { 366, 10, 25, 25}, "Pr", &ctx->process_enabled))
 		ctx->process_enabled = !ctx->process_enabled;
-	if (GuiButton((Rectangle) { 392, 10, 25, 25}, "CL"))
+	if (GuiButton((Rectangle) { 392, 10, 25, 25}, "Cl"))
 		ctx->clear_req = true;
-	if (GuiButton((Rectangle) { 418, 10, 25, 25}, "CO"))
+	if (GuiButton((Rectangle) { 418, 10, 25, 25}, "Co"))
 		ctx->corrupt_req = true;
-	if (GuiButton((Rectangle) { 444, 10, 25, 25}, "R"))
+	if (GuiButton((Rectangle) { 444, 10, 25, 25}, "Re"))
 		ctx->restart_req = true;
-	if (GuiToggle((Rectangle) { 470, 10, 25, 25}, "P", &ctx->draw_pc))
+	if (GuiToggle((Rectangle) { 470, 10, 25, 25}, "PC", &ctx->draw_pc))
 		ctx->draw_pc = true;
 	
 	Vector2 size = {4, 4};
