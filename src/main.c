@@ -53,6 +53,7 @@ typedef struct context_t {
 	int        target_fps;
 	BlueCpu_t* cpu;
 	prng_t*    rng;
+	bool       draw_pc; // Draws PC register
 	bool       process_enabled; // Enables process
 	bool       step_req;        // Single step
 	bool       clear_req;       // Clears CPU memory and regs
@@ -68,8 +69,8 @@ void Shutdown(context_t* ctx);
 Color GetColorFromCell(uint16_t val);
 
 int main(void) {
-	context_t ctx = { {512, 512}, 60, NULL, NULL, false,
-	                  false, false, false, false};
+	context_t ctx = {{512, 512}, 60, NULL, NULL,
+	                 false, false, false, false, false, true};
 	
 	Setup(&ctx);
 	
@@ -107,14 +108,17 @@ void Process(context_t* ctx) {
 		emulateCycle(ctx->cpu);
 	}
 	if (ctx->step_req) {
+		ctx->process_enabled = false;
 		emulateCycle(ctx->cpu);
 		ctx->step_req = false;
 	}
 	if (ctx->clear_req) {
+		ctx->process_enabled = false;
 		clearRam(ctx->cpu);
 		ctx->clear_req = false;
 	}
 	if (ctx->corrupt_req) {
+		ctx->process_enabled = false;
 		for (uint16_t i = 0; i < RAM_LEN; i++) {
 			uint16_t cell = (uint16_t)pcg32_random_r(&ctx->rng);
 			setRamCell(ctx->cpu, i, cell);
@@ -122,6 +126,7 @@ void Process(context_t* ctx) {
 		ctx->corrupt_req = false;
 	}
 	if (ctx->restart_req) {
+		ctx->process_enabled = false;
 		free(ctx->cpu);
 		ctx->cpu = initCpu(malloc, free);
 		if (!ctx->cpu) {
@@ -133,7 +138,6 @@ void Process(context_t* ctx) {
 			return 2;
 		}
 		enableCpu(ctx->cpu);
-		ctx->process_enabled = false;
 		ctx->restart_req = false;
 	}
 }
@@ -145,7 +149,7 @@ void Draw(context_t* ctx) {
 	// UI
 	if (GuiButton((Rectangle) { 340, 10, 25, 25}, "S"))
 		ctx->step_req = true;
-	if (GuiButton((Rectangle) { 366, 10, 25, 25}, "P"))
+	if (GuiToggle((Rectangle) { 366, 10, 25, 25}, "P", &ctx->process_enabled))
 		ctx->process_enabled = !ctx->process_enabled;
 	if (GuiButton((Rectangle) { 392, 10, 25, 25}, "CL"))
 		ctx->clear_req = true;
@@ -153,11 +157,13 @@ void Draw(context_t* ctx) {
 		ctx->corrupt_req = true;
 	if (GuiButton((Rectangle) { 444, 10, 25, 25}, "R"))
 		ctx->restart_req = true;
+	if (GuiToggle((Rectangle) { 470, 10, 25, 25}, "P", &ctx->draw_pc))
+		ctx->draw_pc = true;
 	
+	Vector2 size = {4, 4};
 	// CPU
 	// RAM
 	Vector2 pos = {10, 10};
-	Vector2 size = {4, 4};
 	Color color;
 	uint16_t cell = 0;
 	uint16_t cell_d;
@@ -176,9 +182,22 @@ void Draw(context_t* ctx) {
 	}
 	
 	// Registers
-	uint16_t reg = getRegister(ctx->cpu, REG_PC);
-	Vector2 ir_pos = {10 + reg % 64 * 5, 10 + reg / 64 * 5};
-	DrawRectangleLines(ir_pos.x, ir_pos.y, 5, 5, (Color){0xFF, 0x00, 0x00, 0xFF});
+	// PC
+	if (ctx->draw_pc) {
+		uint16_t reg = getRegister(ctx->cpu, REG_PC);
+		Vector2 ir_pos = {10 + reg % 64 * (size.x + 1), 10 + reg / 64 * (size.y + 1)};
+		if (ctx->cpu->status_switches[SW_POWER])
+			DrawRectangleLines(ir_pos.x, ir_pos.y, size.x, size.y,
+			                   (Color){0xFF, 0x00, 0x00, 0xFF});
+	}
+	// registers[]
+	Vector2 reg_pos = {10, 335};
+	Color reg_clr;
+	for (size_t i = 0; i < REGS_LEN; i++) {
+		reg_clr = GetColorFromCell(ctx->cpu->registers[i]);
+		DrawRectangleV(reg_pos, size, reg_clr);
+		reg_pos.x += size.x + 1;
+	}
 	
 	// Switches
 	Vector2 sw_pos = {10, 330};
