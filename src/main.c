@@ -1,3 +1,5 @@
+// STD
+#include <time.h>
 // Raylib
 #include "raylib.h"
 #include "raymath.h"
@@ -89,8 +91,8 @@ void Setup(context_t* ctx) {
 	SetTargetFPS(ctx->target_fps);
 	
 	ctx->rng = malloc(sizeof(pcg32_random_t));
-	ctx->rng->state = 80085; // TODO: Replace for timestamp
-	ctx->rng->inc = 800815;
+	ctx->rng->state = time(NULL);
+	ctx->rng->inc = 0;
 	
 	ctx->cpu = initCpu(malloc, free);
 	if (!ctx->cpu) {
