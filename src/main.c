@@ -121,6 +121,7 @@ void Process(context_t* ctx) {
 	}
 	if (ctx->corrupt_req) {
 		ctx->process_enabled = false;
+		SoftCpuReset(ctx->cpu);
 		for (uint16_t i = 0; i < RAM_LEN; i++) {
 			uint16_t cell = (uint16_t)pcg32_random_r(&ctx->rng);
 			setRamCell(ctx->cpu, i, cell);
@@ -222,6 +223,15 @@ void Draw(context_t* ctx) {
 void Shutdown(context_t* ctx) {
 	CloseWindow();
 	deinitCpu(ctx->cpu, free);
+}
+
+void SoftCpuReset(BlueCpu_t* cpu) {
+	setClockpulse(cpu, 1);
+	setState(cpu, ST_FETCH);
+	clearRegisters(cpu);
+	setSwitch(cpu, SW_POWER, true);
+	setSwitch(cpu, 1, false);
+	setSwitch(cpu, 2, false);
 }
 
 Color GetColorFromCell(uint16_t value) {
