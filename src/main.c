@@ -64,8 +64,9 @@ typedef struct context_t {
 } context_t;
 
 void Setup(context_t* ctx);
-void Process(context_t* ctx);
-void Draw(context_t* ctx);
+void MainLoop(context_t* ctx);
+void Process(context_t* ctx, double deltatime);
+void Draw(context_t* ctx, double deltattime);
 void Shutdown(context_t* ctx);
 
 Color GetColorFromCell(uint16_t val);
@@ -75,12 +76,7 @@ int main(void) {
 	                 true, false, false, false, false, true};
 	
 	Setup(&ctx);
-	
-	while (!WindowShouldClose()) {
-		Process(&ctx);
-		Draw(&ctx);
-	}
-	
+	MainLoop(&ctx);
 	Shutdown(&ctx);
 	
 	return 0;
@@ -105,7 +101,15 @@ void Setup(context_t* ctx) {
 	enableCpu(ctx->cpu);
 }
 
-void Process(context_t* ctx) {
+void MainLoop(context_t* ctx) {
+	while (!WindowShouldClose()) {
+		double delta = GetFrameTime();
+		Process(ctx, delta);
+		Draw(ctx, delta);
+	}
+}
+
+void Process(context_t* ctx, double delta) {
 	if (ctx->process_enabled) {
 		emulateCycle(ctx->cpu);
 	}
@@ -145,7 +149,7 @@ void Process(context_t* ctx) {
 	}
 }
 
-void Draw(context_t* ctx) {
+void Draw(context_t* ctx, double delta) {
 	BeginDrawing();
 	ClearBackground(WHITE);
 	
