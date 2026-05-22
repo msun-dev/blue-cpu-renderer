@@ -12,9 +12,17 @@ flags_emcc="$RAYLIB/libraylibweb.a \
             --shell-file $RAYLIB/minshell.html "
 
 build() {
-	emcc -o ./bin/main-web.html \
+	emcc -o ./bin/main.html \
         ./src/main.c \
         ./include/blue-cpu/src/cpu.c $flags_cc $flags_emcc
 }
 
-build
+pack() {
+	zip_name='BLUE-CPU-vis.zip'
+	[ -e "./bin/$zip_name" ] && rm ./bin/$zip_name
+	mv ./bin/main.html ./bin/index.html
+	zip ./bin/$zip_name ./bin/index.html ./bin/main.js ./bin/main.wasm
+}
+
+build &&
+pack
