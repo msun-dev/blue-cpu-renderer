@@ -8,7 +8,6 @@
 // Own libs
 #include "../include/prng.h"
 #include "../include/blue-cpu/src/cpu.h"
-#include "../include/blue-cpu/src/types.h"
 
 uint16_t cpu_program[27] = {
 // CODE   addr  ASM OP   Cycles  Registers state
@@ -64,6 +63,7 @@ void Process(context_t* ctx, double deltatime);
 void Draw(context_t* ctx, double deltattime);
 void Shutdown(context_t* ctx);
 
+void SoftCpuReset(BlueCpu_t* cpu);
 Color GetColorFromCell(uint16_t val);
 
 int main(void) {
@@ -87,11 +87,11 @@ void Setup(context_t* ctx) {
 	
 	ctx->cpu = initCpu(malloc, free);
 	if (!ctx->cpu) {
-		return 0;
+		return;
 	}
 	if (loadProgram(
 			  ctx->cpu, 0x0000, cpu_program, sizeof(cpu_program) / sizeof(uint16_t))) {
-		return 2;
+		return;
 	}
 	enableCpu(ctx->cpu);
 }
@@ -132,12 +132,12 @@ void Process(context_t* ctx, double delta) {
 		free(ctx->cpu);
 		ctx->cpu = initCpu(malloc, free);
 		if (!ctx->cpu) {
-			return 0;
+			return;
 		}
 		if (loadProgram(
 					ctx->cpu, 0x0000, cpu_program,
 					sizeof(cpu_program) / sizeof(uint16_t))) {
-			return 2;
+			return;
 		}
 		enableCpu(ctx->cpu);
 		ctx->restart_req = false;
