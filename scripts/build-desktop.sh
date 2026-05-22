@@ -2,7 +2,6 @@
 
 [ ! -f "./bin/" ] && mkdir -v ./bin/ 2>/dev/null
 [ ! -f "./build/" ] && mkdir -v ./build/ 2>/dev/null
-rm -f ./bin/*
 rm -f ./build/*
 
 flags_general="-std=gnu11 -Wall -Wpedantic -Wextra"
