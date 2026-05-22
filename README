@@ -1,7 +1,8 @@
-Visualisation application for BLUE CPU emulator
+Render application for BLUE CPU emulator
 
 	Shows you the current state of the CPUs registers and RAM in the fancy way.
-Allows to control CPU directly.
+Allows to control CPU directly. You can see this app in action at:
+https://msun.itch.io/blue-cpu-renderer
 
 Controls:
 - `St`: "Step" - emulates one cycle
