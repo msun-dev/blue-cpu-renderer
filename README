@@ -14,12 +14,16 @@ Controls:
 Uses:
 - Blue CPU emulator: https://github.com/msun-dev/cpu-blue
 - Raylib (GUI): https://github.com/raysan5/raylib
+- PRNG: https://www.pcg-random.org
 
 To build:
 - Linux: Make sure that you have raylib library installed (static).
-		Then do `./scripts/build.sh`
+		Then do `./scripts/build-desktop.sh`
+- WASM: Make sure to have raylib compiled for web. Better yet look at
+		`./scripts/build-web.sh` and edit folder paths. Since I have raylib.a/raylib.h/
+		/raymath.h/minshell.h in one folder I just aliased it and passed to
+		the compiler. After you are done with your edits just run it.
 - Windows: Not possible yet
-- WASM: Not possible yet
 
 Personal notes:
 	Interestingly this thing is super close to the other project I tried to make:
