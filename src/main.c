@@ -45,11 +45,6 @@ uint16_t cpu_program[27] = {
 	0x0000, //19| HLT xxx | 24    |
 };
 
-typedef struct prng_t {
-	uint32_t state;
-	uint32_t inc;
-} prng_t;
-
 typedef struct context_t {
 	Vector2    screen_size;
 	int        target_fps;
@@ -86,7 +81,7 @@ void Setup(context_t* ctx) {
 	InitWindow(ctx->screen_size.x, ctx->screen_size.y, "Blue CPU Visualiser");
 	SetTargetFPS(ctx->target_fps);
 	
-	ctx->rng = malloc(sizeof(pcg32_random_t));
+	ctx->rng = malloc(sizeof(prng_t));
 	ctx->rng->state = time(NULL);
 	ctx->rng->inc = 0;
 	
@@ -127,7 +122,7 @@ void Process(context_t* ctx, double delta) {
 		ctx->process_enabled = false;
 		SoftCpuReset(ctx->cpu);
 		for (uint16_t i = 0; i < RAM_LEN; i++) {
-			uint16_t cell = (uint16_t)pcg32_random_r(&ctx->rng);
+			uint16_t cell = (uint16_t)pcg32_random_r(ctx->rng);
 			setRamCell(ctx->cpu, i, cell);
 		}
 		ctx->corrupt_req = false;

@@ -3,9 +3,9 @@
 #define pcguint32_t unsigned long
 #define pcguint64_t unsigned long long
 
-typedef struct { pcguint64_t state; pcguint64_t inc; } pcg32_random_t;
+typedef struct { pcguint64_t state; pcguint64_t inc; } prng_t;
 
-pcguint32_t pcg32_random_r(pcg32_random_t* rng)
+pcguint32_t pcg32_random_r(prng_t* rng)
 {
 	pcguint64_t oldstate = rng->state;
 	// Advance internal state
